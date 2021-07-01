@@ -1,0 +1,56 @@
+#!/usr/bin/ruby
+
+require 'yaml'
+
+if File.exists? (ARGV[0])
+  data = YAML.load_file(ARGV[0])
+else
+  data = {}
+end
+
+if ENV['CI_COMMIT_TAG']
+  image_repository = ENV['CI_APPLICATION_REPOSITORY'] || ENV['CI_REGISTRY_IMAGE']
+  image_tag = ENV['CI_APPLICATION_TAG'] || ENV['CI_COMMIT_TAG']
+else
+  image_repository = ENV['CI_APPLICATION_REPOSITORY'] || "#{ENV['CI_REGISTRY_IMAGE']}/#{ENV['CI_COMMIT_REF_SLUG']}"
+  image_tag = ENV['CI_APPLICATION_TAG'] || ENV['CI_COMMIT_SHA']
+end
+
+prefix_regex = /^K8S_SECRET_/
+
+File.open('docker-compose.yml', 'w') { |file|
+  environment = ENV
+    .select { |k, v| k =~ prefix_regex }
+    .transform_keys { |k| k.sub(prefix_regex, '') }
+  volumes = (data.dig('persistence', 'volumeMounts') || [])
+    .map { |o| "./data/#{o['subPath']}:#{o['mountPath']}" }
+  yml = {
+    'version' => '3.3',
+    'services' => {
+      'auto_deploy_app' => {
+        'image' => "#{image_repository}:#{image_tag}",
+        'container_name' => 'auto_deploy_app',
+        'labels' => [
+          'traefik.enable=true',
+          "traefik.http.routers.auto_deploy_app.rule=Host(`#{ENV['ADDITIONAL_HOSTS']}`)",
+          'traefik.http.routers.auto_deploy_app.entrypoints=websecure',
+          'traefik.http.routers.auto_deploy_app.tls.certresolver=myresolver'
+        ],
+        'restart' => 'always',
+        'environment' => environment,
+        'expose' => [
+          data.dig('service', 'internalPort') || 80
+        ],
+        'volumes' => volumes
+      }
+    },
+    'networks' => {
+      'default' => {
+        'external' => {
+          'name' => 'traefik-proxy'
+        }
+      }
+    }
+  }
+  file.write yml.to_yaml
+}

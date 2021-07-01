@@ -4,6 +4,6 @@ RUN apk add --no-cache \
   ca-certificates \
   ruby \
   bash
-  
+
 COPY src/ build/
 RUN ln -s /build/bin/* /usr/local/bin/
