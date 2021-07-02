@@ -18,7 +18,7 @@ end
 
 prefix_regex = /^K8S_SECRET_/
 
-File.open('docker-compose.yml', 'w') { |file|
+File.open('.gitlab/docker-compose.yml', 'w') { |file|
   environment = ENV
     .select { |k, v| k =~ prefix_regex }
     .transform_keys { |k| k.sub(prefix_regex, '') }
