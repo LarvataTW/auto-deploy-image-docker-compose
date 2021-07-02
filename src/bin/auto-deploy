@@ -15,7 +15,7 @@ function generate_docker_compose() {
     echo "No helm values file found at ${helm_values_file@Q}"
   fi
 
-  docker-compose-generator $helm_values_file)
+  docker-compose-generator $helm_values_file
 }
 
 function prepare_ssh_enviroment() {
