@@ -54,11 +54,12 @@ function deploy() {
     image_tag=${CI_APPLICATION_TAG:-$CI_COMMIT_TAG}
   fi
 
-  ssh $DEPLOY_SSH_HOST 'bash -s' <<'  ENDSSH'
-    echo $WORK_DIR
+  ssh $DEPLOY_SSH_HOST bash -c "'
+    mkdir -p ${WORK_DIR}
 
     docker login -u "${CI_DEPLOY_USER:-$CI_REGISTRY_USER}" -p "${CI_DEPLOY_PASSWORD:-$CI_REGISTRY_PASSWORD}" $CI_REGISTRY
-  ENDSSH
+    docker pull $image_repository:$image_tag
+  '"
 
 }
 ##
