@@ -43,6 +43,12 @@ function deploy() {
     exit 1
   fi
 
+  if [[ -z "$WORK_DIR" ]]; then
+    echo "WORK_DIR is not setting!"
+
+    exit 1
+  fi
+
   local image_repository
   local image_tag
 
@@ -56,11 +62,19 @@ function deploy() {
 
   ssh $DEPLOY_SSH_HOST bash -c "'
     mkdir -p ${WORK_DIR}
+    cd ${WORK_DIR}
 
     docker login -u "${CI_DEPLOY_USER:-$CI_REGISTRY_USER}" -p "${CI_DEPLOY_PASSWORD:-$CI_REGISTRY_PASSWORD}" $CI_REGISTRY
     docker pull $image_repository:$image_tag
+    [ -e 'docker-compose.yml' ] && docker-compose down || true
   '"
+  scp $CI_PROJECT_DIR/.gitlab/docker-compose.yml $DEPLOY_SSH_HOST:${WORK_DIR}/docker-compose.yml
+  ssh $DEPLOY_SSH_HOST bash -c "'
+    cd ${WORK_DIR}
 
+    docker-compose up -d
+    docker image prune -af
+  '"
 }
 ##
 ## End Helper functions
