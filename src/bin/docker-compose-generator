@@ -24,17 +24,22 @@ File.open('.gitlab/docker-compose.yml', 'w') { |file|
     .transform_keys { |k| k.sub(prefix_regex, '') }
   volumes = (data.dig('persistence', 'volumeMounts') || [])
     .map { |o| "./data/#{o['subPath']}:#{o['mountPath']}" }
+  project_name = ENV['CI_PROJECT_NAME'].gsub("-", "_")
+  rule = ENV['ADDITIONAL_HOSTS']
+    .split(/\s*,\s*/)
+    .map { |o| "Host(`#{o}`)" }
+    .join(" || ")
   yml = {
     'version' => '3.3',
     'services' => {
       'auto_deploy_app' => {
         'image' => "#{image_repository}:#{image_tag}",
-        'container_name' => 'auto_deploy_app',
+        'container_name' => project_name,
         'labels' => [
           'traefik.enable=true',
-          "traefik.http.routers.auto_deploy_app.rule=Host(`#{ENV['ADDITIONAL_HOSTS']}`)",
-          'traefik.http.routers.auto_deploy_app.entrypoints=websecure',
-          'traefik.http.routers.auto_deploy_app.tls.certresolver=myresolver'
+          "traefik.http.routers.#{project_name}.rule=#{rule}",
+          "traefik.http.routers.#{project_name}.entrypoints=web,websecure",
+          "traefik.http.routers.#{project_name}.tls.certresolver=myresolver"
         ],
         'restart' => 'always',
         'environment' => environment,
