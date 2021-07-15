@@ -37,9 +37,11 @@ File.open('.gitlab/docker-compose.yml', 'w') { |file|
         'container_name' => project_name,
         'labels' => [
           'traefik.enable=true',
-          "traefik.http.routers.#{project_name}.rule=#{rule}",
-          "traefik.http.routers.#{project_name}.entrypoints=web,websecure",
-          "traefik.http.routers.#{project_name}.tls.certresolver=myresolver"
+          "traefik.http.routers.#{project_name}-http.rule=#{rule}",
+          "traefik.http.routers.#{project_name}-http.entrypoints=web",
+          "traefik.http.routers.#{project_name}-https.rule=#{rule}",
+          "traefik.http.routers.#{project_name}-https.entrypoints=websecure",
+          "traefik.http.routers.#{project_name}-https.tls.certresolver=myresolver"
         ],
         'restart' => 'always',
         'environment' => environment,
