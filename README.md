@@ -48,9 +48,7 @@ networks:
 Put below codes to your .gitlab-ci.yml and replace {YOUR_HOST_URL}.
 ```yml
 include:
-  - project: 'larvata/devops/gitlab-ci-templates'
-    ref: master
-    file: 'Auto-DevOps.gitlab-ci.yml'
+  - template: Auto-DevOps.gitlab-ci.yml
 
 production:
   stage: production
