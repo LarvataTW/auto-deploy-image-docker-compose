@@ -7,9 +7,9 @@ The GitLab Auto-Devops deploy stage image for deploy to non-k8s server with dock
 - Install [Traefik](https://doc.traefik.io/traefik/user-guides/docker-compose/acme-http/)
 - Create docker network `traefik-proxy`
 
-## Install Traefik
+## Setup Traefik
 
-The quick way, remember replace {YOUR_EMAIL} to yours:
+The quick way, remember to replace {YOUR_EMAIL} to yours:
 ```yml
 version: "3.3"
 
@@ -19,17 +19,19 @@ services:
     image: "traefik:v2.4"
     container_name: "traefik"
     command:
-      #- "--log.level=DEBUG"
+    # - "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
+    # - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+    # - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
       - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
-      #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
       - "--certificatesresolvers.myresolver.acme.email={YOUR_EMAIL}"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
     ports:
       - "80:80"
       - "443:443"
